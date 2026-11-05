@@ -80,5 +80,14 @@ jobs:
           path: ${{ env.WORKDIR }}/target/*.jar
 
       - name: Publish JAR to Nexus
+        if: github.event_name == 'push'
         working-directory: ${{ env.WORKDIR }}
-        run: mvn -B deploy -DskipTests
+        env:
+          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
+          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
+        run: |
+          if [[ -z "$NEXUS_USERNAME" || -z "$NEXUS_PASSWORD" ]]; then
+            echo "::error::NEXUS_USERNAME and NEXUS_PASSWORD must be configured as repository or organization secrets."
+            exit 1
+          fi
+          mvn -B deploy -DskipTests
